@@ -1,7 +1,8 @@
-<project name="Java Timekeeper" default="jar" basedir=".">
+<project name="Java Timekeeper" default="deploy" basedir=".">
 
 	<property name="src" value="."/>
 	<property name="build" value="build"/>
+	<property name="jar" value="jtkr.jar"/>
 
 	<target name="build">
 		<javac srcdir="${src}" destdir="${build}"
@@ -11,7 +12,11 @@
 	</target>
 
 	<target name="jar" depends="build">
-		<jar destfile="jtkr.jar" manifest="jtkr.mf" basedir="${build}"></jar>
+		<jar destfile="${jar}" manifest="jtkr.mf" basedir="${build}"></jar>
+	</target>
+	
+	<target name="deploy" depends="jar">
+		<copy file="${jar}" todir="${user.home}/javabin"/>
 	</target>
 
 </project>
