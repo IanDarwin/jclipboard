@@ -1,0 +1,17 @@
+<project name="Java Timekeeper" default="jar" basedir=".">
+
+	<property name="src" value="."/>
+	<property name="build" value="build"/>
+
+	<target name="build">
+		<javac srcdir="${src}" destdir="${build}"
+			debug="true" deprecation="true"
+			failonerror="false">
+		</javac>
+	</target>
+
+	<target name="jar" depends="build">
+		<jar destfile="jtkr.jar" manifest="jtkr.mf" basedir="${build}"></jar>
+	</target>
+
+</project>
