@@ -3,9 +3,12 @@
 	<property name="src" value="."/>
 	<property name="build" value="build"/>
 	<property name="jar" value="jtkr.jar"/>
+	<property name="deploy.dir" value="${user.home}/lib"/>
+	<property name="darwinsys.jar" value="${deploy.dir}/darwinsys.jar"/>
 
 	<target name="build">
 		<javac srcdir="${src}" destdir="${build}"
+			classpath="${darwinsys.jar}"
 			debug="true" deprecation="true"
 			failonerror="false">
 		</javac>
@@ -16,7 +19,7 @@
 	</target>
 	
 	<target name="deploy" depends="jar">
-		<copy file="${jar}" todir="${user.home}/javabin"/>
+		<copy file="${jar}" todir="${deploy.dir}"/>
 	</target>
 
 </project>
