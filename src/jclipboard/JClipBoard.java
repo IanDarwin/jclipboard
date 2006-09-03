@@ -6,8 +6,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Iterator;
+import java.io.PrintWriter;
+import java.util.*;
 import java.util.prefs.Preferences;
 
 import javax.swing.JButton;
@@ -17,7 +19,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 import com.darwinsys.swingui.UtilGUI;
 import com.darwinsys.util.FileProperties;
@@ -31,14 +33,16 @@ import com.darwinsys.util.FileProperties;
 public class JClipBoard extends JComponent {
 
 	private static final long serialVersionUID = 3258689901418723377L;
+
 	public static final String DATA_DIR_NAME = ".jclipboard";
+	private final static String DIR_NAME = System.getProperty("user.home") + File.separator + DATA_DIR_NAME;
 	private static final String PROPERTIES_FILE_NAME = "default.properties";
+	private static final String fileName = DIR_NAME + File.separator + PROPERTIES_FILE_NAME;
 
 	public static void main(String[] args) throws IOException {
 
 		JFrame jf = new JFrame("jClipboard");
-		String dirName = System.getProperty("user.home") + File.separator + DATA_DIR_NAME;
-		JClipBoard program = new JClipBoard(jf, dirName);
+		JClipBoard program = new JClipBoard(jf, DIR_NAME);
 		jf.getContentPane().add(program);
 		jf.pack();
 		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -48,17 +52,16 @@ public class JClipBoard extends JComponent {
 	/** The main frame */
 	final JFrame jf;
 
-	/** The directory */
-	final String dirName;
-
 	/** The list of name-value pairs loaded from disk */
-	final FileProperties projects;
+	final Properties projects;
+
+	final Map<String, JTextField> map = new HashMap<String, JTextField>();
 
 	Preferences p = Preferences.userNodeForPackage(JClipBoard.class);
 
 	/** Construct a JTkr, setting up the VIEW and connecting CONTROLLERs to it */
 	JClipBoard(JFrame theFrame, String dirName) throws IOException {
-		this.dirName = dirName;
+		// this.DIR_NAME = dirName;
 
 		jf = theFrame;
 		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -72,6 +75,19 @@ public class JClipBoard extends JComponent {
 		jf.setJMenuBar(mb);
 		JMenu fileMenu = new JMenu("File");
 		mb.add(fileMenu);
+		fileMenu.add(mi = new JMenuItem("Save"));
+		mi.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					doSave();
+				} catch (IOException e1) {
+					JOptionPane.showMessageDialog(jf, e1.toString(),
+							"Error", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+
+		});
+		fileMenu.addSeparator();
 		fileMenu.add(mi = new JMenuItem("Exit"));
 		mi.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -93,16 +109,18 @@ public class JClipBoard extends JComponent {
 
 		setLayout(new GridLayout(0, 2));
 
-		projects = new FileProperties(dirName + File.separator + PROPERTIES_FILE_NAME);
+		projects = new FileProperties(fileName);
 
-		Iterator projectsIterator = projects.keySet().iterator();
+		List<String> keySet = new ArrayList(projects.keySet());
+		Collections.sort(keySet);
+		Iterator projectsIterator = keySet.iterator();
 		while (projectsIterator.hasNext()) {
 			String name = (String)projectsIterator.next();
 			JButton b = new JButton(name);
 			add(b);
 			String describe = (String)projects.get(name);
-			JTextArea copy = new JTextArea(describe);
-			copy.setEditable(false);
+			JTextField copy = new JTextField(describe);
+			map.put(name, copy);
 			b.addActionListener(new Copier(copy));
 			add(copy);
 
@@ -110,8 +128,8 @@ public class JClipBoard extends JComponent {
 	}
 
 	class Copier implements ActionListener {
-		JTextArea b;
-		Copier(JTextArea b) {
+		JTextField b;
+		Copier(JTextField b) {
 			this.b = b;
 		}
 		public void actionPerformed(ActionEvent e) {
@@ -144,5 +162,24 @@ public class JClipBoard extends JComponent {
 		int x = Math.max(0, p.getInt("mainwindow.x", 0));
 		int y = Math.max(0, p.getInt("mainwindow.y", 0));
 		return new Point(x, y);
+	}
+
+	// A sort of model...
+
+	void doSave() throws IOException {
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(new FileWriter(fileName));
+			out.println("# created by JClipBoard " + new Date());
+			Iterator<String> projectsIterator = map.keySet().iterator();
+			while (projectsIterator.hasNext()) {
+				String name = projectsIterator.next();
+				out.println(name + "=" + map.get(name).getText());
+			}
+		} finally {
+			if (out != null) {
+				out.close();
+			}
+		}
 	}
 }
