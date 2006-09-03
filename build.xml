@@ -1,8 +1,9 @@
-<project name="Java Timekeeper" default="deploy" basedir=".">
+<project name="Java Clipboard" default="deploy" basedir=".">
 
 	<property name="src" value="."/>
 	<property name="build" value="build"/>
-	<property name="jar" value="jtkr.jar"/>
+	<property name="program" value="jclipboard"/>
+	<property name="jar" value="${program}.jar"/>
 	<property name="deploy.dir" value="${user.home}/lib"/>
 	<property name="darwinsys.jar" value="${deploy.dir}/darwinsys.jar"/>
 
@@ -15,9 +16,9 @@
 	</target>
 
 	<target name="jar" depends="build">
-		<jar destfile="${jar}" manifest="jtkr.mf" basedir="${build}"></jar>
+		<jar destfile="${jar}" manifest="${program}.mf" basedir="${build}"></jar>
 	</target>
-	
+
 	<target name="deploy" depends="jar">
 		<copy file="${jar}" todir="${deploy.dir}"/>
 	</target>
