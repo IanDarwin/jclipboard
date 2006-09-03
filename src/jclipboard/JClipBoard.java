@@ -115,7 +115,7 @@ public class JClipBoard extends JComponent {
 			this.b = b;
 		}
 		public void actionPerformed(ActionEvent e) {
-			System.out.println("Copier.actionPerformed()");
+			// System.out.println("Copier.actionPerformed()");
 			b.setSelectionStart(0);
 			b.setSelectionEnd(b.getText().length());
 			b.copy();
