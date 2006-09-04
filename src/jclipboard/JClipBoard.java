@@ -95,6 +95,27 @@ public class JClipBoard extends JComponent {
 			}
 
 		});
+
+		JMenu editMenu = new JMenu("Edit");
+		mb.add(editMenu);
+		editMenu.add(mi = new JMenuItem("New"));
+		mi.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String newName = JOptionPane.showInputDialog(jf,
+						"Field Name", "New Field", JOptionPane.QUESTION_MESSAGE);
+				if (newName == null) {
+					return;
+				}
+				if (map.containsKey(newName)) {
+					JOptionPane.showMessageDialog(jf,
+							String.format("Field %s already exists", newName));
+					return;
+				}
+				addField(newName, "ENTER TEXT");
+				jf.pack();
+			}
+		});
+
 		JMenu helpMenu = new JMenu("Help");
 		mb.add(helpMenu);
 		helpMenu.add(mi = new JMenuItem("About"));
@@ -116,15 +137,19 @@ public class JClipBoard extends JComponent {
 		Iterator projectsIterator = keySet.iterator();
 		while (projectsIterator.hasNext()) {
 			String name = (String)projectsIterator.next();
-			JButton b = new JButton(name);
-			add(b);
 			String describe = (String)projects.get(name);
-			JTextField copy = new JTextField(describe);
-			map.put(name, copy);
-			b.addActionListener(new Copier(copy));
-			add(copy);
+			addField(name, describe);
 
 		}
+	}
+
+	private void addField(String name, String describe) {
+		JButton b = new JButton(name);
+		add(b);
+		JTextField copy = new JTextField(describe);
+		map.put(name, copy);
+		b.addActionListener(new Copier(copy));
+		add(copy);
 	}
 
 	class Copier implements ActionListener {
