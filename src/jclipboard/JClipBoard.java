@@ -1,6 +1,5 @@
 package jclipboard;
 
-import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,7 +8,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.prefs.Preferences;
 
 import javax.swing.JButton;
@@ -22,6 +29,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import com.darwinsys.swingui.UtilGUI;
+import com.darwinsys.swingui.layout.EntryLayout;
 import com.darwinsys.util.FileProperties;
 
 /**
@@ -128,13 +136,19 @@ public class JClipBoard extends JComponent {
 			}
 		});
 
-		setLayout(new GridLayout(0, 2));
+		//setLayout(new GridLayout(0, 2));
+		setLayout(new EntryLayout(new double[] {.3, .7}));
 
 		projects = new FileProperties(fileName);
 
-		List<String> keySet = new ArrayList(projects.keySet());
-		Collections.sort(keySet);
-		Iterator projectsIterator = keySet.iterator();
+		// Use Enumeration instead of keySet() to avoid generics warnings
+		Enumeration propertyNames = projects.propertyNames();
+		List<String> keyNames = new ArrayList<String>();
+		while (propertyNames.hasMoreElements()) {
+			keyNames.add((String)propertyNames.nextElement());
+		}
+		Collections.sort(keyNames);
+		Iterator projectsIterator = keyNames.iterator();
 		while (projectsIterator.hasNext()) {
 			String name = (String)projectsIterator.next();
 			String describe = (String)projects.get(name);
