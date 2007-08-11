@@ -1,6 +1,13 @@
 package jclipboard;
 
+import java.awt.AWTException;
+import java.awt.Image;
+import java.awt.MenuItem;
 import java.awt.Point;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentEvent;
@@ -26,6 +33,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 
 import com.darwinsys.swingui.UtilGUI;
@@ -54,6 +62,11 @@ public class JClipBoard extends JComponent {
 		jf.getContentPane().add(program);
 		jf.pack();
 		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		// Don't need both SystemTray and main window
+		if (SystemTray.isSupported()) {
+			jf.setState(JFrame.ICONIFIED);
+		}
 		jf.setVisible(true);
 	}
 
@@ -67,12 +80,37 @@ public class JClipBoard extends JComponent {
 
 	Preferences p = Preferences.userNodeForPackage(JClipBoard.class);
 
+	private SystemTray systemTray;
+
+	/** Must use AWT Menus for Systemtray, not swing :-( */
+	private PopupMenu trayPopupMenu;
+
 	/** Construct a JTkr, setting up the VIEW and connecting CONTROLLERs to it */
 	JClipBoard(JFrame theFrame, String dirName) throws IOException {
 		// this.DIR_NAME = dirName;
 
 		jf = theFrame;
 		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		trayPopupMenu = new PopupMenu();
+		if (SystemTray.isSupported()) {
+			systemTray = SystemTray.getSystemTray();
+			Image image = 
+				Toolkit.getDefaultToolkit().getImage("jclipboard/trayicon.gif");
+			TrayIcon trayIcon = 
+				new TrayIcon(image, "Tray Demo", trayPopupMenu);
+			trayIcon.setImageAutoSize(true);
+
+			try {
+				systemTray.add(trayIcon);
+			} catch (AWTException e) {
+				JOptionPane.showMessageDialog(
+						jf, "Boring - TrayIcon could not be added.");
+			}
+		} else {
+			JOptionPane.showMessageDialog(
+					jf, "Boring - No System tray Support");
+		}
 
 		// Set the frame's location to saved value, if set, and arrange
 		// for the location to be set whenever the window is moved.
@@ -83,46 +121,66 @@ public class JClipBoard extends JComponent {
 		jf.setJMenuBar(mb);
 		JMenu fileMenu = new JMenu("File");
 		mb.add(fileMenu);
-		fileMenu.add(mi = new JMenuItem("Save"));
-		mi.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				try {
-					doSave();
-				} catch (IOException e1) {
-					JOptionPane.showMessageDialog(jf, e1.toString(),
-							"Error", JOptionPane.ERROR_MESSAGE);
-				}
-			}
+		JMenuItem saveMenuItem = new JMenuItem("Save");
+		fileMenu.add(saveMenuItem);
 
-		});
+		final ActionListener saveAction = new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						try {
+							doSave();
+						} catch (IOException e1) {
+							JOptionPane.showMessageDialog(jf, e1.toString(),
+									"Error", JOptionPane.ERROR_MESSAGE);
+						}
+					}
+
+				};
+		saveMenuItem.addActionListener(saveAction);
+
+
 		fileMenu.addSeparator();
-		fileMenu.add(mi = new JMenuItem("Exit"));
-		mi.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				System.exit(0);
-			}
-
-		});
+		JMenuItem quitMenuitem = new JMenuItem("Exit");
+		fileMenu.add(quitMenuitem);
+		final ActionListener quitAction = new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						System.exit(0);
+					}
+				};
+		quitMenuitem.addActionListener(quitAction);
 
 		JMenu editMenu = new JMenu("Edit");
 		mb.add(editMenu);
-		editMenu.add(mi = new JMenuItem("New"));
-		mi.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String newName = JOptionPane.showInputDialog(jf,
-						"Field Name", "New Field", JOptionPane.QUESTION_MESSAGE);
-				if (newName == null) {
-					return;
-				}
-				if (map.containsKey(newName)) {
-					JOptionPane.showMessageDialog(jf,
-							String.format("Field %s already exists", newName));
-					return;
-				}
-				addField(newName, "ENTER TEXT");
-				jf.pack();
-			}
-		});
+		JMenuItem newMenuItem = new JMenuItem("New");
+		editMenu.add(newMenuItem);
+		final ActionListener newAction = new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						String newName = JOptionPane.showInputDialog(jf,
+								"Field Name", "New Field", JOptionPane.QUESTION_MESSAGE);
+						if (newName == null) {
+							return;
+						}
+						if (map.containsKey(newName)) {
+							JOptionPane.showMessageDialog(jf,
+									String.format("Field %s already exists", newName));
+							return;
+						}
+						addField(newName, "ENTER TEXT");
+						jf.pack();
+					}
+				};
+		newMenuItem.addActionListener(newAction);
+
+		// The SystemTray popup menu
+		MenuItem popupNewMenuItem = new MenuItem("New");
+		popupNewMenuItem.addActionListener(newAction);
+		trayPopupMenu.add(popupNewMenuItem);
+		MenuItem popupSaveMenuItem = new MenuItem("Save");
+		popupSaveMenuItem.addActionListener(saveAction);
+		trayPopupMenu.add(popupSaveMenuItem);
+		MenuItem popupQuitMenuitem = new MenuItem("Exit");
+		trayPopupMenu.add(popupQuitMenuitem);
+		popupSaveMenuItem.addActionListener(quitAction);
+		trayPopupMenu.addSeparator();
 
 		JMenu helpMenu = new JMenu("Help");
 		mb.add(helpMenu);
@@ -153,16 +211,19 @@ public class JClipBoard extends JComponent {
 			String name = (String)projectsIterator.next();
 			String describe = (String)projects.get(name);
 			addField(name, describe);
-
 		}
 	}
 
 	private void addField(String name, String describe) {
 		JButton b = new JButton(name);
-		add(b);
+		MenuItem mi = new MenuItem(name);
+		trayPopupMenu.add(mi);
+		this.add(b);
 		JTextField copy = new JTextField(describe);
 		map.put(name, copy);
-		b.addActionListener(new Copier(copy));
+		final Copier listener = new Copier(copy);
+		b.addActionListener(listener);
+		mi.addActionListener(listener);
 		add(copy);
 	}
 
