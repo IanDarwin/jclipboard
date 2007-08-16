@@ -204,9 +204,9 @@ public class JClipBoard extends JComponent {
 		MenuItem popupSaveMenuItem = new MenuItem("Save");
 		popupSaveMenuItem.addActionListener(saveAction);
 		trayPopupMenu.add(popupSaveMenuItem);
-		MenuItem popupQuitMenuitem = new MenuItem("Exit");
-		trayPopupMenu.add(popupQuitMenuitem);
-		popupSaveMenuItem.addActionListener(quitAction);
+		MenuItem popupQuitMenuItem = new MenuItem("Exit");
+		trayPopupMenu.add(popupQuitMenuItem);
+		popupQuitMenuItem.addActionListener(quitAction);
 		trayPopupMenu.addSeparator();
 
 		JMenu helpMenu = new JMenu("Help");
