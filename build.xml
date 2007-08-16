@@ -9,6 +9,7 @@
 
 	<target name="build">
 		<javac srcdir="${src}" destdir="${build}"
+			source="1.6" target="1.6"
 			classpath="${darwinsys.jar}"
 			debug="true" deprecation="true"
 			failonerror="false">
