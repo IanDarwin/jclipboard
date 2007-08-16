@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -33,7 +34,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 
 import com.darwinsys.swingui.UtilGUI;
@@ -54,6 +54,7 @@ public class JClipBoard extends JComponent {
 	private final static String DIR_NAME = System.getProperty("user.home") + File.separator + DATA_DIR_NAME;
 	private static final String PROPERTIES_FILE_NAME = "default.properties";
 	private static final String fileName = DIR_NAME + File.separator + PROPERTIES_FILE_NAME;
+	private static final String iconFileName = "jclipboard/trayicon.gif";
 
 	public static void main(String[] args) throws IOException {
 
@@ -85,31 +86,33 @@ public class JClipBoard extends JComponent {
 	/** Must use AWT Menus for Systemtray, not swing :-( */
 	private PopupMenu trayPopupMenu;
 
-	/** Construct a JTkr, setting up the VIEW and connecting CONTROLLERs to it */
+	/** Construct the gui, setting up the VIEW and connecting CONTROLLERs to it */
 	JClipBoard(JFrame theFrame, String dirName) throws IOException {
-		// this.DIR_NAME = dirName;
 
 		jf = theFrame;
 		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		final URL iconFileURL = getClass().getClassLoader().getResource(iconFileName);
+		final Image image =
+			Toolkit.getDefaultToolkit().getImage(iconFileURL);
+		jf.setIconImage(image);
 
 		trayPopupMenu = new PopupMenu();
 		if (SystemTray.isSupported()) {
 			systemTray = SystemTray.getSystemTray();
-			Image image = 
-				Toolkit.getDefaultToolkit().getImage("jclipboard/trayicon.gif");
-			TrayIcon trayIcon = 
-				new TrayIcon(image, "Tray Demo", trayPopupMenu);
+			TrayIcon trayIcon =
+				new TrayIcon(image, "JClipBoard", trayPopupMenu);
 			trayIcon.setImageAutoSize(true);
 
 			try {
 				systemTray.add(trayIcon);
 			} catch (AWTException e) {
+				final String trayAddFailure = "Boring - TrayIcon could not be added.";
 				JOptionPane.showMessageDialog(
-						jf, "Boring - TrayIcon could not be added.");
+						jf, trayAddFailure);
+				final ExceptionInInitializerError newException = new ExceptionInInitializerError(trayAddFailure);
+				newException.initCause(e);
+				throw newException;
 			}
-		} else {
-			JOptionPane.showMessageDialog(
-					jf, "Boring - No System tray Support");
 		}
 
 		// Set the frame's location to saved value, if set, and arrange
@@ -137,7 +140,6 @@ public class JClipBoard extends JComponent {
 				};
 		saveMenuItem.addActionListener(saveAction);
 
-
 		fileMenu.addSeparator();
 		JMenuItem quitMenuitem = new JMenuItem("Exit");
 		fileMenu.add(quitMenuitem);
@@ -153,21 +155,46 @@ public class JClipBoard extends JComponent {
 		JMenuItem newMenuItem = new JMenuItem("New");
 		editMenu.add(newMenuItem);
 		final ActionListener newAction = new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						String newName = JOptionPane.showInputDialog(jf,
-								"Field Name", "New Field", JOptionPane.QUESTION_MESSAGE);
-						if (newName == null) {
-							return;
-						}
-						if (map.containsKey(newName)) {
-							JOptionPane.showMessageDialog(jf,
-									String.format("Field %s already exists", newName));
-							return;
-						}
-						addField(newName, "ENTER TEXT");
-						jf.pack();
+			public void actionPerformed(ActionEvent e) {
+				Object[] message = new Object[4];
+				message[0] = "Name";
+				final JTextField nameTextField = new JTextField();
+				message[1] = nameTextField;
+				message[2] = "Value";
+				final JTextField valueTextField = new JTextField();
+				message[3] = valueTextField;
+
+				// Options
+				String[] options = { "OK", "Cancel" };
+				int result =
+					JOptionPane.showOptionDialog(jf, message, // contents
+						"New Field", 				// window title
+						JOptionPane.DEFAULT_OPTION, // option type
+						JOptionPane.INFORMATION_MESSAGE, // message type
+						null, 						// no icon
+						options, 					// button labels
+						options[0]					// default button
+						);
+				switch (result) {
+				case 0: // yes
+					String newName = nameTextField.getText();
+					if (map.containsKey(newName)) {
+						JOptionPane.showMessageDialog(jf, String.format(
+								"Field %s already exists", newName));
+						return;
 					}
-				};
+					addField(newName, valueTextField.getText());
+					jf.pack();
+					break;
+				case 1: case -1:
+					JOptionPane.showMessageDialog(jf, "What a waste!");
+					break;
+				default:
+					JOptionPane.showMessageDialog(jf, "What am I doing here?");
+					break;
+				}
+			}
+		};
 		newMenuItem.addActionListener(newAction);
 
 		// The SystemTray popup menu
@@ -199,7 +226,8 @@ public class JClipBoard extends JComponent {
 
 		projects = new FileProperties(fileName);
 
-		// Use Enumeration instead of keySet() to avoid generics warnings
+		// Use Enumeration instead of keySet() in a failed
+		// attempt to avoid generics warnings
 		Enumeration propertyNames = projects.propertyNames();
 		List<String> keyNames = new ArrayList<String>();
 		while (propertyNames.hasMoreElements()) {
