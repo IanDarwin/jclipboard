@@ -20,6 +20,12 @@
 		<jar destfile="${jar}" manifest="${program}.mf" basedir="${build}"></jar>
 	</target>
 
+	<target name="run" depends="jar">
+		<java classname="jclipboard.JClipBoard"
+			classpath="${jar}:${darwinsys.jar}"
+		/>
+	</target>
+
 	<target name="deploy" depends="jar">
 		<copy file="${jar}" todir="${deploy.dir}"/>
 	</target>
