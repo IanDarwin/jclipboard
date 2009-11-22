@@ -51,15 +51,17 @@ public class JClipBoard extends JComponent {
 	private static final long serialVersionUID = 3258689901418723377L;
 
 	public static final String DATA_DIR_NAME = ".jclipboard";
-	private final static String DIR_NAME = System.getProperty("user.home") + File.separator + DATA_DIR_NAME;
-	private static final String PROPERTIES_FILE_NAME = "default.properties";
-	private static final String fileName = DIR_NAME + File.separator + PROPERTIES_FILE_NAME;
+	private static final String PROPERTIES_FILE_NAME = 
+		"default.properties";
+	private static final String fileName = 
+		System.getProperty("user.home") + File.separator + 
+		DATA_DIR_NAME+ File.separator + PROPERTIES_FILE_NAME;
 	private static final String iconFileName = "jclipboard/trayicon.gif";
 
 	public static void main(String[] args) throws IOException {
 
 		JFrame jf = new JFrame("jClipboard");
-		JClipBoard program = new JClipBoard(jf, DIR_NAME);
+		JClipBoard program = new JClipBoard(jf);
 		jf.getContentPane().add(program);
 		jf.pack();
 		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -87,7 +89,7 @@ public class JClipBoard extends JComponent {
 	private PopupMenu trayPopupMenu;
 
 	/** Construct the gui, setting up the VIEW and connecting CONTROLLERs to it */
-	JClipBoard(JFrame theFrame, String dirName) throws IOException {
+	JClipBoard(JFrame theFrame) throws IOException {
 
 		jf = theFrame;
 		jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -228,12 +230,12 @@ public class JClipBoard extends JComponent {
 
 		// Use Enumeration instead of keySet() in a failed
 		// attempt to avoid generics warnings
-		Enumeration propertyNames = projects.propertyNames();
+		Enumeration<String> propertyNames = (Enumeration<String>)projects.propertyNames();
 		List<String> keyNames = new ArrayList<String>();
 		while (propertyNames.hasMoreElements()) {
-			keyNames.add((String)propertyNames.nextElement());
+			keyNames.add(propertyNames.nextElement());
 		}
-		Collections.sort(keyNames);
+		Collections.sort(keyNames, String.CASE_INSENSITIVE_ORDER);
 		Iterator projectsIterator = keyNames.iterator();
 		while (projectsIterator.hasNext()) {
 			String name = (String)projectsIterator.next();
