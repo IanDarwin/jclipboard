@@ -50,12 +50,11 @@ public class JClipBoard extends JComponent {
 
 	private static final long serialVersionUID = 3258689901418723377L;
 
-	public static final String DATA_DIR_NAME = ".jclipboard";
-	private static final String PROPERTIES_FILE_NAME = 
-		"default.properties";
-	private static final String fileName = 
-		System.getProperty("user.home") + File.separator + 
-		DATA_DIR_NAME+ File.separator + PROPERTIES_FILE_NAME;
+	private static final String PROPERTIES_FILE_NAME = ".jclipboard.properties";
+
+	private static final String FULL_PROPS_FILE_NAME = 
+		System.getProperty("user.home") + File.separator + PROPERTIES_FILE_NAME;
+
 	private static final String iconFileName = "jclipboard/trayicon.gif";
 
 	public static void main(String[] args) throws IOException {
@@ -226,7 +225,7 @@ public class JClipBoard extends JComponent {
 		//setLayout(new GridLayout(0, 2));
 		setLayout(new EntryLayout(new double[] {.3, .7}));
 
-		projects = new FileProperties(fileName);
+		projects = new FileProperties(FULL_PROPS_FILE_NAME);
 
 		// Use Enumeration instead of keySet() in a failed
 		// attempt to avoid generics warnings
@@ -299,7 +298,7 @@ public class JClipBoard extends JComponent {
 	void doSave() throws IOException {
 		PrintWriter out = null;
 		try {
-			out = new PrintWriter(new FileWriter(fileName));
+			out = new PrintWriter(new FileWriter(FULL_PROPS_FILE_NAME));
 			out.println("# created by JClipBoard " + new Date());
 			Iterator<String> projectsIterator = map.keySet().iterator();
 			while (projectsIterator.hasNext()) {
