@@ -6,6 +6,7 @@
 	<artifactId>jclipboard</artifactId>
 	<version>1.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	<inceptionYear>2006</inceptionYear>
 
 	<name>Java widget for list of Clipboard shortcuts</name>
 	<url>http://darwinsys.com/freeware</url>
