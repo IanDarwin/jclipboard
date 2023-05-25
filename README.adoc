@@ -1,9 +1,13 @@
 = JClipboard
 
+NB This repo only had one source file so it has been merged into
+my general-purpose library,
+https://github.com/IanDarwin/darwinsys-api[darwinsys-api].
+
 Maintains a list of clipboard shortcuts, each a name-value pair.
 
 Tries to iconify itself into the system taskbar, where supported.
 
 Properties are stored in a Java properties file in your home directory,
-jclipaboard.properties, which can safely be edited while the program
+jclipboard.properties, which can safely be edited while the program
 is not running.
